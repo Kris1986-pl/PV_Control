@@ -4,6 +4,7 @@ import json
 from requests import get, Session
 from time import sleep
 from urllib.parse import urljoin
+import logging
 
 # Load configuration values from .env file or environment variables
 SERVER = config('SERVER')
@@ -16,6 +17,9 @@ base_url = f'https://{SERVER}/api/'
 session = Session()
 session.headers['Authorization'] = f'Bearer {PERSONAL_ACCESS_TOKEN}'
 
+# Konfiguracja logowania
+logging.basicConfig(filename='/var/www/html/app.log', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logger = logging.getLogger(__name__)
 
 def fetch_device_state(id_device):
     # Fetch the state of the device with the given id_device
@@ -39,18 +43,18 @@ def fetch_pv_value(url):
 
 
 while True:
-    print("*"*20)
-    print(datetime.now().strftime("%H:%M:%S"))
-    pv_value = fetch_pv_value(PV_URL)
-    print(f'Current power PV: {pv_value}')
+    logger.info("*"*20)
+    logger.info(datetime.now().strftime("%H:%M:%S"))
+    pv_value = 4000 #fetch_pv_value(PV_URL)
+    logger.info(f'Current power PV: {pv_value}')
 
     # Check if PV value exceeds threshold and device state needs to be updated
     if pv_value > 2999 and not fetch_device_state(ID):
         update_device_parameters(ID, {"action": "TURN_ON"})
-        print("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
+        logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
     elif pv_value < 2999 and fetch_device_state(ID):
         update_device_parameters(ID, {"action": "TURN_OFF"})
-        print("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
+        logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
     else:
-        print("Didn't change stata")
-    sleep(300)
+        logger.info("Didn't change stata")
+    sleep(3)
