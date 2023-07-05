@@ -45,7 +45,7 @@ def fetch_pv_value(url):
 while True:
     logger.info("*"*20)
     logger.info(datetime.now().strftime("%H:%M:%S"))
-    pv_value = 4000 #fetch_pv_value(PV_URL)
+    pv_value = fetch_pv_value(PV_URL)
     logger.info(f'Current power PV: {pv_value}')
 
     # Check if PV value exceeds threshold and device state needs to be updated
