@@ -52,4 +52,4 @@ The PV Control script serves as a practical example of integrating a Supla devic
 ## Raspberry Pi
 
 PV Control is designed to run on Raspberry Pi devices. It leverages the GPIO capabilities and the Linux environment provided by Raspberry Pi to interface with the Supla device and monitor the PV system's power.
- note that the `SERVER` and `PERSONAL_ACCESS_TOKEN` values should be obtained from the Supla Cloud service at https://cloud.supla.org/. On the other hand, the `ID` and `PV_URL` parameters should correspond to the specific devices and PV system in your local network.
+ note that the `SERVER`, `PERSONAL_ACCESS_TOKEN` and `ID` values should be obtained from the Supla Cloud service at https://cloud.supla.org/. On the other hand, the `PV_URL` parameters should correspond to the specific devices and PV system in your local network.
