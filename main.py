@@ -1,6 +1,6 @@
 from decouple import config
 import json
-from requests import get, Session
+from requests import get, Session, exceptions
 from time import sleep
 from urllib.parse import urljoin
 import logging
@@ -42,21 +42,31 @@ def update_device_parameters(id_device, parameter):
 
 
 def fetch_pv_value(url):
-    # Fetch the PV value from the provided URL
-    return int(json.loads(get(url).text)['Body']['Data']['Site']['P_PV'])
+    try:
+        response = get(url)
+        response.raise_for_status()  # Raises an error if there was an HTTP request error
+        data = json.loads(response.text)
+        return int(data['Body']['Data']['Site']['P_PV'])
+    except (exceptions.RequestException, json.JSONDecodeError, KeyError) as e:
+        logger.error("An error occurred while fetching the PV value: %s", str(e))
+        return -1
+    except ValueError as e:
+        logger.error("Unable to convert PV value to int: %s", str(e))
+        return -1
 
 
 while True:
     counter += 1
     logger.info("*"*20)
     pv_value = fetch_pv_value(PV_URL)  # Log separator
+    # pv_value = 3000  # Log separator
     logger.info(f'Current power PV: {pv_value}')  # Log current PV power value
 
     # Check if PV value exceeds threshold and device state needs to be updated
     if pv_value > 2999 and not fetch_device_state(ID):
         update_device_parameters(ID, {"action": "TURN_ON"})
         logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
-    elif pv_value < 2999 and fetch_device_state(ID):
+    elif 0 < pv_value < 2999  and fetch_device_state(ID):
         update_device_parameters(ID, {"action": "TURN_OFF"})
         logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
     else:
