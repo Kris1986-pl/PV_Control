@@ -27,9 +27,13 @@ logger = logging.getLogger(__name__)
 
 def fetch_device_state(id_device):
     # Fetch the state of the device with the given id_device
-    with session.get(urljoin(base_url, f'channels/{id_device}')) as resp:
-        data = resp.json()
-    return data['on']
+    try:
+        with session.get(urljoin(base_url, f'channels/{id_device}')) as resp:
+            data = resp.json()
+        return data['on']
+    except KeyError as e:
+        logger.error(e)
+        return -1
 
 
 def update_device_parameters(id_device, parameter):
@@ -52,6 +56,9 @@ def fetch_pv_value(url):
         return -1
     except ValueError as e:
         logger.error("Unable to convert PV value to int: %s", str(e))
+        return -1
+    except TypeError as e:
+        logger.error(e)
         return -1
 
 
