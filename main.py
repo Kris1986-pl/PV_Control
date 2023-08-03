@@ -4,21 +4,26 @@ from requests import get, Session, exceptions
 from time import sleep
 from urllib.parse import urljoin
 import logging
-
+from os import environ
 # Load configuration values from .env file or environment variables
 # Server configuration - URL and Access token configuration of the Supla Cloud service (https://cloud.supla.org/)
 SERVER = config('SERVER')
 PERSONAL_ACCESS_TOKEN = config('PERSONAL_ACCESS_TOKEN')
 # Fronius service-related configuration
 ID = config('ID')
-# PV_URL for Fronius service - URL for accessing the Fronius API
-PV_URL = config('PV_URL') + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+
+if environ.get('ENVIRONMENT') == 'production':
+    PV_URL = 'http://localhost/' + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+    log_file = 'app.log'
+else:
+    # PV_URL for Fronius service - URL for accessing the Fronius API
+    PV_URL = config('PV_URL') + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+    log_file = '/var/www/html/app.log'
 
 # Set up base URL and session for API requests
 base_url = f'https://{SERVER}/api/'
 session = Session()
 session.headers['Authorization'] = f'Bearer {PERSONAL_ACCESS_TOKEN}'
-log_file = 'app.log'
 counter = 0
 
 # Configure logging
