@@ -31,8 +31,8 @@ SERVER = config('SERVER')
 PERSONAL_ACCESS_TOKEN = config('PERSONAL_ACCESS_TOKEN')
 # Fronius service-related configuration
 ID = config('ID')
-
-if environ.get('ENVIRONMENT') == 'production':
+print(environ.get('ENVIRONMENT'))
+if environ.get('ENVIRONMENT') == 'development':
     PV_URL = 'http://localhost/' + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
     LOG_FILE = 'app.log'
 else:
@@ -102,23 +102,24 @@ def fetch_pv_value(url):
         return -1
 
 
-while True:
-    for counter in range(144):
-        logger.info("*"*20)
-        pv_value = fetch_pv_value(PV_URL)  # Log separator
-        # pv_value = 3000  # Log separator
-        logger.info('Current power PV: %s', pv_value)  # Log current PV power value
+if __name__ == '__main__':
+    while True:
+        for counter in range(144):
+            logger.info("*"*20)
+            pv_value = fetch_pv_value(PV_URL)  # Log separator
+            # pv_value = 3000  # Log separator
+            logger.info('Current power PV: %s', pv_value)  # Log current PV power value
 
-        # Check if PV value exceeds threshold and device state needs to be updated
-        if pv_value > 2999 and not fetch_device_state(ID):
-            update_device_parameters(ID, {"action": "TURN_ON"})
-            logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
-        elif 0 < pv_value < 2999 and fetch_device_state(ID):
-            update_device_parameters(ID, {"action": "TURN_OFF"})
-            logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
-        else:
-            logger.info("No state change")  # Log when no state change occurs
-        sleep(600)  # Sleep for 10 minutes
-        if counter == 144:
-            with open(LOG_FILE, 'w', encoding='utf-8') as file:
-                file.write('')  # Clear log file at the end of the day
+            # Check if PV value exceeds threshold and device state needs to be updated
+            if pv_value > 2999 and not fetch_device_state(ID):
+                update_device_parameters(ID, {"action": "TURN_ON"})
+                logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
+            elif 0 < pv_value < 2999 and fetch_device_state(ID):
+                update_device_parameters(ID, {"action": "TURN_OFF"})
+                logger.info("Device is turn ON" if fetch_device_state(ID) else "Device is turn OFF")
+            else:
+                logger.info("No state change")  # Log when no state change occurs
+            sleep(600)  # Sleep for 10 minutes
+            if counter == 144:
+                with open(LOG_FILE, 'w', encoding='utf-8') as file:
+                    file.write('')  # Clear log file at the end of the day
