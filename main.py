@@ -31,19 +31,24 @@ SERVER = config('SERVER')
 PERSONAL_ACCESS_TOKEN = config('PERSONAL_ACCESS_TOKEN')
 # Fronius service-related configuration
 ID = config('ID')
-print(environ.get('ENVIRONMENT'))
-if environ.get('ENVIRONMENT') == 'development':
-    PV_URL = 'http://localhost/' + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
-    LOG_FILE = 'app.log'
-else:
-    # PV_URL for Fronius service - URL for accessing the Fronius API
-    PV_URL = config('PV_URL') + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
-    LOG_FILE = '/var/www/html/app.log'
 
 # Set up base URL and session for API requests
 base_url = f'https://{SERVER}/api/'
 session = Session()
 session.headers['Authorization'] = f'Bearer {PERSONAL_ACCESS_TOKEN}'
+
+
+def env_is_dev():
+    return True if environ.get('ENVIRONMENT') == "development" else False
+
+
+if env_is_dev:
+    PV_URL = "http://127.0.0.1:8000/solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+    LOG_FILE = 'app.log'
+else:
+    # PV_URL for Fronius service - URL for accessing the Fronius API
+    PV_URL = config('PV_URL') + "solar_api/v1/GetPowerFlowRealtimeData.fcgi"
+    LOG_FILE = "/var/www/html/app.log"
 
 # Configure logging
 logging.basicConfig(filename=LOG_FILE,
@@ -81,13 +86,13 @@ def update_device_parameters(id_device, parameter):
         return response
 
 
-def fetch_pv_value(url):
+def fetch_pv_value():
     """
     :param url: url to API PV System
     :return: The value of moza production from PV. If -1 -> Error
     """
     try:
-        response = get(url, timeout=10)
+        response = get(PV_URL, timeout=10)
         response.raise_for_status()  # Raises an error if there was an HTTP request error
         data = json.loads(response.text)
         return int(data['Body']['Data']['Site']['P_PV'])
@@ -106,7 +111,7 @@ if __name__ == '__main__':
     while True:
         for counter in range(144):
             logger.info("*"*20)
-            pv_value = fetch_pv_value(PV_URL)  # Log separator
+            pv_value = fetch_pv_value()  # Log separator
             # pv_value = 3000  # Log separator
             logger.info('Current power PV: %s', pv_value)  # Log current PV power value
 
